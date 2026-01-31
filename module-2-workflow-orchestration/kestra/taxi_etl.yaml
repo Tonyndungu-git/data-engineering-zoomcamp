@@ -1,0 +1,37 @@
+id: taxi_etl
+namespace: zoomcamp.module2
+
+inputs:
+  - id: taxi
+    type: STRING
+    required: true
+    defaults: green
+
+  - id: year
+    type: INT
+    required: true
+    defaults: 2021
+
+  - id: month
+    type: STRING
+    required: true
+    defaults: "01"
+
+variables:
+  file: "{{ inputs.taxi }}_tripdata_{{ inputs.year }}-{{ inputs.month }}.csv"
+
+tasks:
+  - id: extract
+    type: io.kestra.plugin.core.http.Download
+    uri: "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{{ inputs.taxi }}/{{ vars.file }}"
+    destination: "{{ workingDir }}/{{ vars.file }}"
+
+  - id: log_file_size
+    type: io.kestra.plugin.core.log.Log
+    message: "Downloaded {{ vars.file }}"
+
+triggers:
+  - id: monthly_schedule
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "0 6 1 * *"
+    timezone: America/New_York
